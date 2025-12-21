@@ -1,132 +1,122 @@
-# FlowGuard
+🛡️ FlowGuard: Next-Generation Adaptive Concurrency Control & Backpressure for Rust
+Crates.io | License: MIT | Rust
 
-**Adaptive Concurrency Control and Backpressure for Axum/Tower**
+🎯 About the Project
+Created and developed by: Cleiton Augusto Correa Bezerra
 
-[![Crates.io](https://img.shields.io/crates/v/flow-guard)](https://crates.io/crates/flow-guard)
-[![Documentation](https://docs.rs/flow-guard/badge.svg)](https://docs.rs/flow-guard)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Repository](https://img.shields.io/badge/github-repository-blue)](https://github.com/cleitonaugusto/flow-guard)
+FlowGuard is a next-generation load control library. Unlike static rate limiters, FlowGuard uses congestion control algorithms (TCP Vegas) to dynamically adjust load limits based on real latency and system health.
 
-## The Problem: Static Limits are a Guessing Game
+🚀 The Innovation: Why FlowGuard?
+Setting a fixed limit (e.g., "maximum 100 connections") is a trap in modern systems:
 
-When building resilient microservices in Rust, setting a static concurrency limit (like `semaphore::Permits` or a fixed worker pool) is a common but fragile approach.
+Limit too high: System crashes (Cascading Failure) before reaching the limit
 
-*   Set the limit **too high**, and a sudden spike can overwhelm your database or external API, causing a cascading failure.
-*   Set it **too low**, and you're wasting resources and unnecessarily throttling valid traffic.
+Limit too low: Wasted hardware and refusal of legitimate traffic
 
-You're left tuning a magic number based on guesses rather than the actual health of your system.
+FlowGuard solves this with:
 
-## The Solution: Adapt Based on Latency
+✅ Auto-tuning:
+Observes RTT (Round Trip Time). If latency rises, it reduces concurrency. If the system is fast, it expands capacity.
 
-FlowGuard is a Tower service layer that implements **adaptive concurrency control**. Instead of a fixed limit, it dynamically adjusts the number of concurrent in-flight requests by monitoring their latency (round-trip time).
+✅ Native Resilience:
+Protects databases and external services from overload.
 
-*   **When latency increases**, it reduces the concurrency limit, applying backpressure at the edge of your service.
-*   **When the system is responsive**, it cautiously increases the limit to utilize available capacity.
+✅ Zero-Cost Abstractions:
+Built with atomic operations in Rust for extreme performance.
 
-The core algorithm is inspired by **TCP Vegas**, a congestion control algorithm known for its efficiency and low latency.
+📦 Installation
+Add this to your Cargo.toml:
 
-## Quick Start with Axum
-
-Add FlowGuard to your `Cargo.toml`:
-```toml
+toml
 [dependencies]
-flow-guard = "0.1"
-Protect an Axum router in minutes:
+# Core Version
+flow-guard = "0.1.0"
+
+# With full Axum 0.8 / Tower support
+flow-guard = { version = "0.1.0", features = ["axum", "tower"] }
+🚀 Quick Start (Axum 0.8)
+FlowGuard is plug-and-play and uses the modern Rust middleware pattern.
 
 rust
-use axum::{routing::get, Router};
-use flow_guard::{FlowGuardLayer, strategy::VegasStrategy};
+use axum::{routing::get, Router, error_handling::HandleErrorLayer};
+use flow_guard::{FlowGuardLayer, VegasStrategy, FlowError};
 use tower::ServiceBuilder;
 
 #[tokio::main]
 async fn main() {
-    // Start with an initial limit of 10 concurrent requests.
-    let strategy = VegasStrategy::new(10);
+// Initialize: (Initial Limit, Minimum, Maximum)
+let strategy = VegasStrategy::new(10, 2, 100);
+let flow_layer = FlowGuardLayer::new(strategy);
+
     let app = Router::new()
-        .route("/api", get(|| async { "Hello, guarded world!" }))
-        .layer(ServiceBuilder::new().layer(FlowGuardLayer::new(strategy)));
+        .route("/api/data", get(|| async { "Hello from Protected API!" }))
+        .layer(
+            ServiceBuilder::new()
+                .layer(HandleErrorLayer::new(|err: FlowError<std::convert::Infallible>| async move {
+                    // Automatically returns 503 Service Unavailable if overloaded
+                    axum::response::IntoResponse::into_response(err)
+                }))
+                .layer(flow_layer)
+        );
 
-    // ... bind and serve as usual
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
-When the limit is reached, the layer returns a 503 Service Unavailable response, signaling to callers (or upstream load balancers) to back off.
+📊 The Vegas Algorithm (The Math)
+The Vegas strategy adjusts the limit $L$ based on the difference between current RTT and base RTT:
 
-How It Works: The Vegas Strategy
-The Vegas strategy inside FlowGuard maintains two key metrics:
+🔧 Features
+✅ Dynamic Adaptation
+Real-time concurrency adjustment based on system health
 
-Base RTT: The minimum observed round-trip time (system's healthy baseline).
+Proactive congestion prevention
 
-Current RTT: The latency of recent requests.
+No manual tuning required
 
-The algorithm continuously compares them. If the current RTT consistently exceeds the base RTT by a certain threshold (alpha), it infers the system is congested and reduces the concurrency limit. If everything is fast, it slowly probes for more capacity.
+✅ Resilience Patterns
+Protects against cascading failures
 
-You can tune the sensitivity:
+Preserves system stability under load
 
-rust
-let strategy = VegasStrategy::new(10)
-    .with_alpha(2)   // Lower = more sensitive to latency increases
-    .with_beta(4);   // Higher = more aggressive in adding capacity
-Core Features
-Adaptive, Not Static: Eliminates the need for static concurrency limits.
+Graceful degradation
 
-Tower & Axum Native: Works seamlessly with the Rust service ecosystem.
+✅ Production Ready
+Built with atomic operations for maximum performance
 
-Minimal Overhead: Built with performance in mind using efficient data structures.
+Zero-cost abstractions
 
-Informative Errors: Integrates with Tower's error handling to provide clear backpressure signals.
+Seamless integration with Axum/Tower ecosystem
 
-Comparison with Similar Solutions
-The Rust ecosystem has several approaches to load management. Here's how FlowGuard compares:
+✅ Observability
+Built-in metrics collection
 
-Aspect	FlowGuard	Static Semaphores	Rate Limiters	Queue-Based Solutions
-Primary Goal	Prevent downstream overload	Limit max concurrency	Limit requests/second	Maintain target latency
-Adaptive?	✅ Yes (latency-based)	❌ No (fixed)	❌ Usually static	✅ Yes (queue-based)
-Protects Downstream?	✅ Proactively	⚠️ Only if limit is correct	❌ No (controls rate)	⚠️ Indirectly
-Queueing	❌ No (immediate backpressure)	❌ No	❌ Usually no	✅ Yes
-Configuration	Simple (initial limit)	Simple (fixed number)	Medium (RPS + burst)	Complex (queue + latency targets)
-Best Use Case	Protecting DBs/APIs from overload	Simple worker pools	API rate limiting	User-facing latency SLAs
-When to Choose FlowGuard
-FlowGuard is particularly useful when:
+Easy integration with Prometheus
 
-Your service depends on downstream components (databases, external APIs) with variable performance
+Real-time monitoring capabilities
 
-You want zero queuing and immediate backpressure signals (503 responses)
+💼 Future Vision (Enterprise Edition)
+FlowGuard is an Open-Core project. While the community version focuses on isolated instances, our Enterprise Edition focuses on:
 
-You need protection that adapts automatically without manual tuning
+🌐 Distributed Flow Control
+Global flow control synchronized via Redis/NATS for Kubernetes clusters
 
-Simplicity matters - set an initial limit and let the algorithm adjust
+📈 Observability Dashboard
+Real-time panels (Prometheus/Grafana) to visualize traffic throttling
 
-When Other Approaches Might Be Better
-Static semaphores work well for CPU-bound worker pools with known limits
+⚡ Dynamic Thresholds
+Real-time security policy changes via Control Plane
 
-Rate limiters (like tower-governor) are essential for API quota enforcement
+📚 Documentation
+Full API documentation is available on docs.rs
 
-Queue-based solutions (like Little Loadshedder) excel when you need predictable latency guarantees and can tolerate queueing
+🤝 Contributing
+Contributions are the heart of the Rust community! Feel free to submit pull requests or open issues.
 
-FlowGuard complements these approaches rather than replacing them. For example, you might use:
+Author: Cleiton Augusto Correa Bezerra
+Email: augusto.cleiton@gmail.com
+LinkedIn: cleiton-augusto-b619435b
 
-Rate limiting at your API gateway
-
-FlowGuard to protect your database layer
-
-Static semaphores for CPU-intensive background tasks
-
-Is This Production Ready?
-FlowGuard is a young crate (v0.1.x). It implements a proven algorithm, but its integration and edge cases are being refined. The current version is best suited for:
-
-Evaluation and testing in staging environments.
-
-Services where the primary risk is overloading a downstream dependency (like a database).
-
-Important considerations:
-
-The state is per-service-instance. For a cluster-wide limit, you need a distributed coordinator (a planned future feature).
-
-Like any adaptive system, it needs traffic to "learn". Its behavior with very low traffic or bursty patterns is still being observed.
-
-Contributions, bug reports, and real-world deployment stories are incredibly valuable to help mature this project.
-
-Contributing
-Contributions are welcome! Please feel free to submit pull requests or open issues on GitHub.
-
-License
+📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+Made with ❤️ and Rust
