@@ -11,13 +11,13 @@ async fn handler() -> &'static str {
 
 #[tokio::main]
 async fn main() {
-    // 1. Inicializa a estratégia corretamente
-    let strategy = VegasStrategy::new(50, 10, 500);
 
-    // 2. USA A LAYER DA SUA LIB (Não use struct local aqui!)
+    let strategy = VegasStrategy::new(50);
+
+
     let flow_layer = FlowGuardLayer::new(strategy);
 
-    // 3. Aplica ao seu Router com tratamento de erro
+
     let app = Router::new()
         .route("/api/data", get(handler))
         .layer(
@@ -28,7 +28,7 @@ async fn main() {
                 .layer(flow_layer)
         );
 
-    // 4. Servidor moderno (TcpListener)
+
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
     println!("🚀 Servidor 2 (API) rodando em http://localhost:3000");

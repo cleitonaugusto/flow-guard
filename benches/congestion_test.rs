@@ -21,7 +21,7 @@ fn bench_flow_guard_throughput(c: &mut Criterion) {
     c.bench_function("flow_guard_high_concurrency_overhead", |b| {
         b.to_async(&rt).iter(|| async {
             // 1. Criamos a estratégia e a camada de proteção
-            let strategy = VegasStrategy::new(10, 2, 100);
+            let strategy = VegasStrategy::new(10);
             let flow_layer = FlowGuardLayer::new(strategy);
 
             // 2. Setup do Router com tratamento de erro obrigatório para Axum 0.8

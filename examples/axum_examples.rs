@@ -8,7 +8,7 @@ use tower::ServiceBuilder;
 #[tokio::main]
 async fn main() {
     // 1. Estratégia Vegas (Inicia em 50, min 10, max 500)
-    let strategy = VegasStrategy::new(50, 10, 500);
+    let strategy = VegasStrategy::new(50);
 
     // 2. Criamos o Layer
     let flow_layer = FlowGuardLayer::new(strategy);

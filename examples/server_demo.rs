@@ -2,7 +2,7 @@
  * Exemplo de uso real do FlowGuard com Axum 0.8
  */
 
-use axum::{routing::get, Router, error_handling::HandleErrorLayer}; // Importe HandleErrorLayer
+use axum::{routing::get, Router, error_handling::HandleErrorLayer};
 use flow_guard::{FlowGuardLayer, VegasStrategy, FlowError};
 use axum::response::IntoResponse;
 
@@ -12,7 +12,7 @@ async fn handler() -> &'static str {
 
 #[tokio::main]
 async fn main() {
-    let strategy = VegasStrategy::new(10, 2, 100);
+    let strategy = VegasStrategy::new(10);
     let flow_layer = FlowGuardLayer::new(strategy);
 
     let app = Router::new()
@@ -21,7 +21,7 @@ async fn main() {
             // No Axum 0.8, usamos ServiceBuilder para lidar com erros de Middleware
             tower::ServiceBuilder::new()
                 .layer(HandleErrorLayer::new(|err: FlowError<std::convert::Infallible>| async move {
-                    // Transforma o erro da lib em uma resposta amigável
+                    // Transforma o erro da lib numa resposta amigável
                     err.into_response()
                 }))
                 .layer(flow_layer)
