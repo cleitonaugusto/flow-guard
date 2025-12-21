@@ -90,22 +90,6 @@ Seamless integration with Axum/Tower ecosystem
 ✅ Observability
 Built-in metrics collection
 
-Easy integration with Prometheus
-
-Real-time monitoring capabilities
-
-💼 Future Vision (Enterprise Edition)
-FlowGuard is an Open-Core project. While the community version focuses on isolated instances, our Enterprise Edition focuses on:
-
-🌐 Distributed Flow Control
-Global flow control synchronized via Redis/NATS for Kubernetes clusters
-
-📈 Observability Dashboard
-Real-time panels (Prometheus/Grafana) to visualize traffic throttling
-
-⚡ Dynamic Thresholds
-Real-time security policy changes via Control Plane
-
 📚 Documentation
 Full API documentation is available on docs.rs
 
