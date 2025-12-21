@@ -1,0 +1,38 @@
+[package]
+name = "flow-guard"
+version = "0.1.1"
+authors = ["Cleiton Augusto Correa Bezerra <augusto.cleiton@gmail.com>"]
+edition = "2021"
+description = "High-performance adaptive concurrency control and backpressure for Rust services."
+license = "MIT"
+repository = "https://github.com/cleitonaugusto/flow-guard"
+readme = "README.md"
+keywords = ["backpressure", "concurrency", "adaptive", "axum", "tower"]
+categories = ["network-programming", "web-programming"]
+
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE",
+    "examples/**/*",
+    "benches/**/*"
+]
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+parking_lot = "0.12"
+thiserror = "1.0"
+tracing = "0.1"
+futures-util = "0.3.31"
+tower = { version = "0.5.2", optional = true }
+axum = { version = "0.8.8", optional = true }
+
+[features]
+default = ["tower", "axum"]
+tower = ["dep:tower"]
+axum = ["dep:axum"]
+
+[dev-dependencies]
+tracing-subscriber = "0.3"
+criterion = { version = "0.5", features = ["async_tokio"] }
