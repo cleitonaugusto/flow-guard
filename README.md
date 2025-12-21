@@ -1,7 +1,5 @@
 # FlowGuard
 
-🎯 About the Project
-Created and developed by: Cleiton Augusto Correa Bezerra
 **Adaptive Concurrency Control and Backpressure for Axum/Tower**
 
 [![Crates.io](https://img.shields.io/crates/v/flow-guard)](https://crates.io/crates/flow-guard)
@@ -76,6 +74,42 @@ Minimal Overhead: Built with performance in mind using efficient data structures
 
 Informative Errors: Integrates with Tower's error handling to provide clear backpressure signals.
 
+Comparison with Similar Solutions
+The Rust ecosystem has several approaches to load management. Here's how FlowGuard compares:
+
+Aspect	FlowGuard	Static Semaphores	Rate Limiters	Queue-Based Solutions
+Primary Goal	Prevent downstream overload	Limit max concurrency	Limit requests/second	Maintain target latency
+Adaptive?	✅ Yes (latency-based)	❌ No (fixed)	❌ Usually static	✅ Yes (queue-based)
+Protects Downstream?	✅ Proactively	⚠️ Only if limit is correct	❌ No (controls rate)	⚠️ Indirectly
+Queueing	❌ No (immediate backpressure)	❌ No	❌ Usually no	✅ Yes
+Configuration	Simple (initial limit)	Simple (fixed number)	Medium (RPS + burst)	Complex (queue + latency targets)
+Best Use Case	Protecting DBs/APIs from overload	Simple worker pools	API rate limiting	User-facing latency SLAs
+When to Choose FlowGuard
+FlowGuard is particularly useful when:
+
+Your service depends on downstream components (databases, external APIs) with variable performance
+
+You want zero queuing and immediate backpressure signals (503 responses)
+
+You need protection that adapts automatically without manual tuning
+
+Simplicity matters - set an initial limit and let the algorithm adjust
+
+When Other Approaches Might Be Better
+Static semaphores work well for CPU-bound worker pools with known limits
+
+Rate limiters (like tower-governor) are essential for API quota enforcement
+
+Queue-based solutions (like Little Loadshedder) excel when you need predictable latency guarantees and can tolerate queueing
+
+FlowGuard complements these approaches rather than replacing them. For example, you might use:
+
+Rate limiting at your API gateway
+
+FlowGuard to protect your database layer
+
+Static semaphores for CPU-intensive background tasks
+
 Is This Production Ready?
 FlowGuard is a young crate (v0.1.x). It implements a proven algorithm, but its integration and edge cases are being refined. The current version is best suited for:
 
@@ -91,14 +125,8 @@ Like any adaptive system, it needs traffic to "learn". Its behavior with very lo
 
 Contributions, bug reports, and real-world deployment stories are incredibly valuable to help mature this project.
 
-🤝 Contributing
-Contributions are the heart of the Rust community! Feel free to submit pull requests or open issues.
+Contributing
+Contributions are welcome! Please feel free to submit pull requests or open issues on GitHub.
 
-Author: Cleiton Augusto Correa Bezerra
-Email: augusto.cleiton@gmail.com
-LinkedIn: cleiton-augusto-b619435b
-
-📄 License
+License
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-Made with ❤️ and Rust
