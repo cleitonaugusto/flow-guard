@@ -1,6 +1,6 @@
 [package]
 name = "flow-guard"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Cleiton Augusto Correa Bezerra <augusto.cleiton@gmail.com>"]
 edition = "2021"
 description = "High-performance adaptive concurrency control and backpressure for Rust services."
