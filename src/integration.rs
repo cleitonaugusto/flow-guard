@@ -2,12 +2,12 @@
  * FlowGuard - Tower/Axum Integration Layer
  */
 
-use crate::{FlowGuard, LimitStrategy};
 use crate::error::FlowError;
-use tower::{Layer, Service};
-use std::task::{Context, Poll};
-use std::sync::Arc;
+use crate::{FlowGuard, LimitStrategy};
 use futures_util::future::BoxFuture;
+use std::sync::Arc;
+use std::task::{Context, Poll};
+use tower::{Layer, Service};
 
 // --- 1. A LAYER ---
 pub struct FlowGuardLayer<S: LimitStrategy> {

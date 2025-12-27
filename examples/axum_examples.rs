@@ -1,7 +1,7 @@
 /* * Created and Developed by: Cleiton Augusto Correa Bezerra */
 
-use axum::{routing::get, Router, error_handling::HandleErrorLayer};
-use flow_guard::{FlowGuardLayer, VegasStrategy, FlowError}; // Importe FlowError
+use axum::{error_handling::HandleErrorLayer, routing::get, Router};
+use flow_guard::{FlowError, FlowGuardLayer, VegasStrategy}; // Importe FlowError
 use std::net::SocketAddr;
 use tower::ServiceBuilder;
 
@@ -15,14 +15,19 @@ async fn main() {
 
     // 3. Router configurado para 2025 (Axum 0.8)
     let app = Router::new()
-        .route("/", get(|| async { "Hello, Cleiton! FlowGuard está ativo." }))
+        .route(
+            "/",
+            get(|| async { "Hello, Cleiton! FlowGuard está ativo." }),
+        )
         .layer(
             ServiceBuilder::new()
-                .layer(HandleErrorLayer::new(|err: FlowError<std::convert::Infallible>| async move {
-                    // Se o FlowGuard barrar a requisição, ele retorna 503 automaticamente
-                    axum::response::IntoResponse::into_response(err)
-                }))
-                .layer(flow_layer) // Passamos por valor, não por referência
+                .layer(HandleErrorLayer::new(
+                    |err: FlowError<std::convert::Infallible>| async move {
+                        // Se o FlowGuard barrar a requisição, ele retorna 503 automaticamente
+                        axum::response::IntoResponse::into_response(err)
+                    },
+                ))
+                .layer(flow_layer), // Passamos por valor, não por referência
         );
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

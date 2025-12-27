@@ -11,15 +11,13 @@
 
 // 1. Declaração dos módulos internos
 pub mod error;
-pub mod strategy;
 pub mod limiter;
+mod semaphore;
+pub mod strategy;
 
-// Condicional: Só compila a integração com Tower se a feature estiver ativa
 #[cfg(feature = "tower")]
 pub mod integration;
 
-// 2. Re-exportações (Facilita a vida do usuário da lib)
-// Isso resolve o erro "Unresolved import" que você teve
 pub use error::FlowError;
 pub use limiter::FlowGuard;
 pub use strategy::VegasStrategy;
@@ -42,8 +40,15 @@ pub trait LimitStrategy: Send + Sync {
     /// Chamado quando ocorre um erro para que a estratégia possa reduzir a carga.
     fn on_error(&self);
 }
+
 impl<S: LimitStrategy + ?Sized> LimitStrategy for std::sync::Arc<S> {
-    fn current_limit(&self) -> usize { (**self).current_limit() }
-    fn on_success(&self, latency: std::time::Duration) { (**self).on_success(latency) }
-    fn on_error(&self) { (**self).on_error() }
+    fn current_limit(&self) -> usize {
+        (**self).current_limit()
+    }
+    fn on_success(&self, latency: std::time::Duration) {
+        (**self).on_success(latency)
+    }
+    fn on_error(&self) {
+        (**self).on_error()
+    }
 }

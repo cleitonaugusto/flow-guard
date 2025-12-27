@@ -2,12 +2,12 @@
  * FlowGuard - Performance & Resilience Benchmark
  */
 
+use axum::{error_handling::HandleErrorLayer, response::IntoResponse, routing::get, Router};
 use criterion::{criterion_group, criterion_main, Criterion};
-use flow_guard::{FlowGuardLayer, VegasStrategy, FlowError};
-use axum::{routing::get, Router, error_handling::HandleErrorLayer, response::IntoResponse};
-use tower::ServiceBuilder;
+use flow_guard::{FlowError, FlowGuardLayer, VegasStrategy};
 use std::time::Duration;
 use tokio::runtime::Runtime;
+use tower::ServiceBuilder;
 
 // Simula um handler de base de dados que demora 10ms (ajustado para o bench não demorar horas)
 async fn slow_handler() -> &'static str {
@@ -25,16 +25,16 @@ fn bench_flow_guard_throughput(c: &mut Criterion) {
             let flow_layer = FlowGuardLayer::new(strategy);
 
             // 2. Setup do Router com tratamento de erro obrigatório para Axum 0.8
-            let app = Router::new()
-                .route("/test", get(slow_handler))
-                .layer(
-                    ServiceBuilder::new()
-                        .layer(HandleErrorLayer::new(|err: FlowError<std::convert::Infallible>| async move {
+            let app = Router::new().route("/test", get(slow_handler)).layer(
+                ServiceBuilder::new()
+                    .layer(HandleErrorLayer::new(
+                        |err: FlowError<std::convert::Infallible>| async move {
                             // Converte o erro Dropped em uma resposta HTTP no benchmark
                             err.into_response()
-                        }))
-                        .layer(flow_layer)
-                );
+                        },
+                    ))
+                    .layer(flow_layer),
+            );
 
             // 3. Simulação de carga: 50 pedidos disparados simultaneamente
             let mut futures = Vec::new();

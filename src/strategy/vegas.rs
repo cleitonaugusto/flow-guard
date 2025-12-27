@@ -5,9 +5,9 @@
  */
 
 use crate::LimitStrategy;
+use parking_lot::RwLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
-use parking_lot::RwLock;
 
 pub struct VegasStrategy {
     current_limit: AtomicUsize,
@@ -47,7 +47,6 @@ impl LimitStrategy for VegasStrategy {
     }
 
     fn on_success(&self, latency: Duration) {
-
         {
             let current_base = self.base_rtt.read();
             if latency < *current_base {
@@ -62,7 +61,6 @@ impl LimitStrategy for VegasStrategy {
         let base_rtt = *self.base_rtt.read();
         let limit = self.current_limit.load(Ordering::Relaxed);
 
-
         if base_rtt.as_nanos() == 0 || latency.as_nanos() == 0 {
             return; // Evita divisão por zero
         }
@@ -71,14 +69,11 @@ impl LimitStrategy for VegasStrategy {
         let actual_throughput = limit as f64 / latency.as_secs_f64();
         let diff = (expected_throughput - actual_throughput) * base_rtt.as_secs_f64();
 
-
         if diff > self.beta {
-
             if limit > self.min_limit {
                 self.current_limit.fetch_sub(1, Ordering::Relaxed);
             }
         } else if diff < self.alpha && limit < self.max_limit {
-
             self.current_limit.fetch_add(1, Ordering::Relaxed);
         }
     }
