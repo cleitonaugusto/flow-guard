@@ -187,3 +187,4 @@ Email: augusto.cleiton@gmail.com
 LinkedIn: cleiton-augusto-b619435b
 
 Made with ❤️ and Rust
+![CI Status](https://github.com/cleitonaugusto/flow-guard/actions/workflows/ci.yml/badge.svg)
