@@ -1,10 +1,11 @@
+---
 name: Rust CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,55 +20,58 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        rust: [stable, ${{ env.MSRV }}]
+        # ✅ CORREÇÃO: Lista explícita em vez de expressão dentro de []
+        rust:
+          - stable
+          - ${{ env.MSRV }}
         include:
           - os: ubuntu-latest
             rust: nightly
             checks: lint
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install Rust Toolchain
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: ${{ matrix.rust == 'nightly' && 'nightly' || matrix.rust }}
-        components: ${{ matrix.rust == 'stable' && 'rustfmt, clippy' || '' }}
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust == 'nightly' && 'nightly' || matrix.rust }}
+          components: ${{ matrix.rust == 'stable' && 'rustfmt, clippy' || '' }}
 
-    - name: Cache Cargo Dependencies and Build Output
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-
+      - name: Cache Cargo Dependencies and Build Output
+        uses: actions/cache@v4
+        with:
+          path:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+            - target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys:
+            - ${{ runner.os }}-cargo-
 
-    - name: Check Formatting
-      if: matrix.rust == 'stable'
-      run: cargo fmt --all -- --check
+      - name: Check Formatting
+        if: matrix.rust == 'stable'
+        run: cargo fmt --all -- --check
 
-    - name: Lint with Clippy (strict)
-      if: matrix.rust == 'stable'
-      run: cargo clippy --all-features -- -D warnings
+      - name: Lint with Clippy (strict)
+        if: matrix.rust == 'stable'
+        run: cargo clippy --all-features -- -D warnings
 
-    - name: Lint with Clippy (nightly, allowed to fail)
-      if: matrix.rust == 'nightly'
-      run: cargo clippy --all-features -- -D warnings || true
+      - name: Lint with Clippy (nightly, allowed to fail)
+        if: matrix.rust == 'nightly'
+        run: cargo clippy --all-features -- -D warnings || true
 
-    - name: Build Library (Default Features)
-      run: cargo build --verbose
+      - name: Build Library (Default Features)
+        run: cargo build --verbose
 
-    - name: Build Library (All Features)
-      run: cargo build --all-features --verbose
+      - name: Build Library (All Features)
+        run: cargo build --all-features --verbose
 
-    - name: Run Tests (Default Features)
-      run: cargo test --verbose
+      - name: Run Tests (Default Features)
+        run: cargo test --verbose
 
-    - name: Run Tests (All Features)
-      run: cargo test --all-features --verbose
+      - name: Run Tests (All Features)
+        run: cargo test --all-features --verbose
 
   test-features:
     name: "Test Features"
