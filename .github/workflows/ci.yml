@@ -1,0 +1,86 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  MSRV: "1.70.0"
+
+jobs:
+  check:
+    name: Check (${{ matrix.os }}, Rust ${{ matrix.rust }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        rust: [stable, ${{ env.MSRV }}]
+        include:
+          - os: ubuntu-latest
+            rust: nightly
+            checks: lint
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust Toolchain (${{ matrix.rust }})
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: ${{ matrix.rust == 'stable' && 'rustfmt, clippy' || '' }}
+
+    - name: Cache Cargo Dependencies and Build Output
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Check Formatting
+      if: matrix.rust == 'stable'
+      run: cargo fmt --all -- --check
+
+    - name: Lint with Clippy (strict)
+      if: matrix.rust == 'stable'
+      run: cargo clippy --all-features -- -D warnings
+
+    - name: Lint with Clippy (nightly, allowed to fail)
+      if: matrix.rust == 'nightly'
+      run: cargo clippy --all-features -- -D warnings || true
+
+    - name: Build Library (Default Features)
+      run: cargo build --verbose
+
+    - name: Build Library (All Features)
+      run: cargo build --all-features --verbose
+
+    - name: Run Tests (Default Features)
+      run: cargo test --verbose
+
+    - name: Run Tests (All Features)
+      run: cargo test --all-features --verbose
+
+  test-features:
+    name: "Test Features"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        feature: ["", "axum", "tower", "axum,tower"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test with feature '${{ matrix.feature }}'
+        run: |
+          if [ -z "${{ matrix.feature }}" ]; then
+            cargo check --verbose
+          else
+            cargo check --features "${{ matrix.feature }}" --verbose
+          fi
