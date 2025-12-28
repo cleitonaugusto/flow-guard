@@ -9,7 +9,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  MSRV: "1.70.0"
 
 jobs:
   check:
@@ -20,14 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        # ✅ CORREÇÃO: Lista explícita em vez de expressão dentro de []
-        rust:
-          - stable
-          - ${{ env.MSRV }}
-        include:
-          - os: ubuntu-latest
-            rust: nightly
-            checks: lint
+        # ✅ CORREÇÃO: Valores explícitos sem variável env
+        rust: ["stable", "1.70.0", "nightly"]
 
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +28,7 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust == 'nightly' && 'nightly' || matrix.rust }}
+          toolchain: ${{ matrix.rust }}
           components: ${{ matrix.rust == 'stable' && 'rustfmt, clippy' || '' }}
 
       - name: Cache Cargo Dependencies and Build Output
