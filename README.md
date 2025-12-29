@@ -1,5 +1,13 @@
 🛡️ FlowGuard: Next-Generation Adaptive Concurrency Control & Backpressure for Rust
 [![Crates.io](https://img.shields.io/crates/v/flow-guard.svg)](https://crates.io/crates/flow-guard)
+![CI Status](https://github.com/cleitonaugusto/flow-guard/actions/workflows/ci.yml/badge.svg)
+![Crates.io](https://img.shields.io/crates/v/flow-guard)
+![Downloads](https://img.shields.io/crates/d/flow-guard)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Documentation](https://docs.rs/flow-guard/badge.svg)
+![Rust Version](https://img.shields.io/badge/rust-1.81%2B-blue)
+![Unsafe](https://img.shields.io/badge/unsafe-forbidden-brightgreen)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Documentation](https://docs.rs/flow-guard/badge.svg)](https://docs.rs/flow-guard)
 
