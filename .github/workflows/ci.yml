@@ -88,3 +88,4 @@ jobs:
             FEATURES=$(echo "${{ matrix.feature }}" | tr '+' ',')
             cargo check --verbose --features "$FEATURES"
           fi
+# CI Test - seg 29 dez 2025 11:40:44 -04
