@@ -1,25 +1,26 @@
 ---
 name: Rust CI
 
-on:
+"on":
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   check:
-    name: Check (${{ matrix.os }}, Rust ${{ matrix.rust }})
-    runs-on: ${{ matrix.os }}
+    name: Check (${{ matrix.rust }})
+    runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.rust == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        rust: ["stable", "1.70.0", "nightly"]
+        rust: ["stable", "1.75.0", "nightly"]
 
     steps:
       - uses: actions/checkout@v4
@@ -28,45 +29,40 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          components: ${{ matrix.rust == 'stable' && 'rustfmt, clippy' || '' }}
+          components: rustfmt, clippy
 
-      - name: Cache Cargo Dependencies and Build Output
+      - name: Cache Cargo Dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: >-
+            ${{ runner.os }}-${{ matrix.rust }}-${{
+            hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-${{ matrix.rust }}-
 
       - name: Check Formatting
         if: matrix.rust == 'stable'
         run: cargo fmt --all -- --check
 
-      - name: Lint with Clippy (strict)
-        if: matrix.rust == 'stable'
-        run: cargo clippy --all-features -- -D warnings
+      - name: Lint with Clippy
+        run: |
+          if [ "${{ matrix.rust }}" == "nightly" ]; then
+            cargo clippy --all-features -- -W warnings
+          else
+            cargo clippy --all-features -- -D warnings
+          fi
 
-      - name: Lint with Clippy (nightly, allowed to fail)
-        if: matrix.rust == 'nightly'
-        run: cargo clippy --all-features -- -D warnings || true
-
-      - name: Build Library (Default Features)
-        run: cargo build --verbose
-
-      - name: Build Library (All Features)
-        run: cargo build --all-features --verbose
-
-      - name: Run Tests (Default Features)
-        run: cargo test --verbose
-
-      - name: Run Tests (All Features)
-        run: cargo test --all-features --verbose
+      - name: Build & Test (All Features)
+        run: |
+          cargo build --verbose --all-features
+          cargo test --verbose --all-features
 
   test-features:
-    name: "Test Features"
+    name: "Feat: ${{ matrix.feature }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -74,7 +70,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Test with feature '${{ matrix.feature }}'
+
+      - name: Cache Cargo (Features)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            target
+          key: >-
+            feat-${{ matrix.feature }}-${{
+            hashFiles('**/Cargo.lock') }}
+
+      - name: Run Check
         run: |
           if [ -z "${{ matrix.feature }}" ]; then
             cargo check --verbose
