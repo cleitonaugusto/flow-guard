@@ -9,7 +9,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  MSRV: "1.70.0"
 
 jobs:
   check:
@@ -19,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: ["stable", "${{ env.MSRV }}", "nightly"]
+        rust: ["stable", "1.70.0", "nightly"]
 
     steps:
       - uses: actions/checkout@v4
