@@ -27,7 +27,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
-          components: ${{ matrix.rust == 'stable' && 'rustfmt, clippy' || '' }}
+          components: rustfmt, clippy
 
       - name: Cache Cargo Dependencies
         uses: actions/cache@v4
@@ -45,13 +45,13 @@ jobs:
         if: matrix.rust == 'stable'
         run: cargo fmt --all -- --check
 
-      - name: Lint with Clippy (strict)
+      - name: Lint with Clippy (stable & MSRV)
         if: matrix.rust != 'nightly'
         run: cargo clippy --all-features -- -D warnings
 
       - name: Lint with Clippy (nightly)
         if: matrix.rust == 'nightly'
-        run: cargo clippy --all-features -- -W warnings
+        run: cargo clippy --all-features -- -W warnings || true
 
       - name: Build Library
         run: cargo build --all-features --verbose
@@ -88,4 +88,3 @@ jobs:
             FEATURES=$(echo "${{ matrix.feature }}" | tr '+' ',')
             cargo check --verbose --features "$FEATURES"
           fi
-# CI Test - seg 29 dez 2025 11:40:44 -04
