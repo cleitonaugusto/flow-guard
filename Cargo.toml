@@ -47,3 +47,5 @@ required-features = ["axum", "tower"]
 name = "basic_usage"
 path = "examples/basic_usage.rs"
 required-features = []
+
+rust-version = "1.81.0"

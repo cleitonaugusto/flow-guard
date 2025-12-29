@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
 
-        rust: ["stable", "1.78.0", "nightly"]
+        rust: ["stable", "1.81.0", "nightly"]
 
     steps:
       - uses: actions/checkout@v4
