@@ -18,8 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # ✅ ATUALIZADO: 1.71.0 em vez de 1.70.0
-        rust: ["stable", "1.71.0", "nightly"]
+
+        rust: ["stable", "1.78.0", "nightly"]
 
     steps:
       - uses: actions/checkout@v4
