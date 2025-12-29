@@ -47,13 +47,3 @@ required-features = ["axum", "tower"]
 name = "basic_usage"
 path = "examples/basic_usage.rs"
 required-features = []
-
-[[example]]
-name = "server"
-path = "examples/server.rs"
-required-features = ["axum", "tower"]
-
-[[example]]
-name = "axum_examples"
-path = "examples/axum_examples.rs"
-required-features = ["axum", "tower"]

@@ -18,7 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: ["stable", "1.70.0", "nightly"]
+        # ✅ ATUALIZADO: 1.71.0 em vez de 1.70.0
+        rust: ["stable", "1.71.0", "nightly"]
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +46,7 @@ jobs:
         if: matrix.rust == 'stable'
         run: cargo fmt --all -- --check
 
-      - name: Lint with Clippy (stable & MSRV)
+      - name: Lint with Clippy (strict)
         if: matrix.rust != 'nightly'
         run: cargo clippy --all-features -- -D warnings
 
